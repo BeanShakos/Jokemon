@@ -1,11 +1,19 @@
-import discord, asyncio, random, os
+import discord, asyncio, random, os, json
+from pymongo import MongoClient
 from discord.ext import commands
 from urllib.parse import urlparse
+
+mongo = MongoClient("mongodb+srv://thomas:{DB_PASSWORD}@cluster0.640kn.mongodb.net/jokemon?retryWrites=true&w=majority".format(DB_PASSWORD=os.getenv("DB_PASSWORD")))
+db = mongo.jokemon
 
 JOKEMON_CHANNEL_ID = 762323041543258112
 JOKEMON_BOT_ID = 722602188417007673
 
 rarity = [
+    {
+        "title":"Joesus Christ",
+        "color":0
+    },
     {
         "title":"Mythic",
         "color": 15401215
@@ -29,11 +37,12 @@ rarity = [
 ]
 
 rarity_weights = [
-    0.05, # 5%
-    0.1,  # 10%
-    0.15, # 15%
-    0.3,  # 30%
-    0.4   # 40%
+    0.0001,
+    0.0499,
+    0.1, 
+    0.15,
+    0.3,
+    0.4 
 ]
 
 def uri_validator(x):
@@ -61,6 +70,13 @@ async def add_joe(message, url):
         embed.set_footer(text=stats["title"])
         embed.set_image(url=url)
         await message.author.send(embed=embed)
+        new_jokemon = {
+            "title": joe_name.content.title(),
+            "rarity": stats,
+            "image_url": url
+        }
+        result = db.jokemon.insert_one(new_jokemon)
+        await message.author.send("New Joe added!")
 
 async def get_joe_name(message,t ):
     joe_name = await client.wait_for('message', check=lambda message: message.author == t, timeout=30)
@@ -72,9 +88,48 @@ async def get_joe_name(message,t ):
         return joe_name
     #await message.author.send("No response or error. Scrapping this joe :(")
 
+@client.command(aliases=['joes'])
+async def fetch(ctx):
+    t = await ctx.send("Fetching Joes...")
+    joes = db.jokemon.find()
+    joesus = ''
+    mythic = ''
+    legendary = ''
+    rare = ''
+    special = ''
+    fundamental = ''
+    for joe in joes:
+        if joe['rarity']['title'] == 'Mythic':
+            mythic += '- ' + joe['title'] + '\n'
+        elif joe['rarity']['title'] == 'Legendary':
+            legendary += '- ' + joe['title'] + '\n'
+        elif joe['rarity']['title'] == 'Rare':
+            rare += '- ' + joe['title'] + '\n'
+        elif joe['rarity']['title'] == 'Special':
+            special += '- ' + joe['title'] + '\n'
+        elif joe['rarity']['title'] == 'Fundamental':
+            fundamental += '- ' + joe['title'] + '\n'
+        elif joe['rarity']['title'] == 'Joesus Christ':
+            joesus += '- ' + '?'*len(joe['title'].split(' ')[0]) + ' ' + joe['title'].split(' ')[1] + '\n'
+
+    text = '''```Joesus Christ:
+{JOESUS_JOES}
+Mythic:
+{MYTHIC_JOES}
+Legendary:
+{LEGENDARY_JOES}
+Rare:
+{RARE_JOES}
+Special:
+{SPECIAL_JOES}
+Fundamental:
+{FUNDAMENTAL_JOES}
+```'''.format(JOESUS_JOES=joesus,MYTHIC_JOES=mythic,LEGENDARY_JOES=legendary,RARE_JOES=rare,SPECIAL_JOES=special,FUNDAMENTAL_JOES=fundamental)
+    await t.edit(content=text)
+
 @client.event
 async def on_message(message):
-    if (((len(message.attachments) > 0 and message.attachments[0].filename[-5:].split('.')[-1] in validFileTypes) or (uri_validator(message.content) and str(message.content).split('?',1)[0][-7:].split('.')[-1] in validFileTypes)) and message.author.id != JOKEMON_BOT_ID and message.channel.id == JOKEMON_CHANNEL_ID):
+    if (((len(message.attachments) > 0 and message.attachments[0].filename[-5:].split('.')[-1].lower() in validFileTypes) or (uri_validator(message.content) and str(message.content).split('?',1)[0][-7:].split('.')[-1].lower() in validFileTypes)) and message.author.id != JOKEMON_BOT_ID and message.channel.id == JOKEMON_CHANNEL_ID):
         if len(message.attachments) > 0:
             url = message.attachments[0].url
         else:
@@ -83,11 +138,15 @@ async def on_message(message):
         await add_joe(message, url)
 
     elif (message.author.id == JOKEMON_BOT_ID or message.channel.id != JOKEMON_CHANNEL_ID):
-        pass
+        await client.process_commands(message)
     else:
         t = await message.channel.send("Invalid submission {}".format(message.author.mention))
         await asyncio.sleep(3)
         await message.delete()
         await t.delete()
 
-client.run("NzIyNjAyMTg4NDE3MDA3Njcz.Xulduw.db1lqNY9NOLUgz0n_PBdr2yNdC8")
+@client.event
+async def on_ready():
+    print("Ready")
+
+client.run(str(os.getenv("DISCORD_TOKEN")))
