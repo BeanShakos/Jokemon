@@ -5,6 +5,37 @@ from urllib.parse import urlparse
 JOKEMON_CHANNEL_ID = 762323041543258112
 JOKEMON_BOT_ID = 722602188417007673
 
+rarity = [
+    {
+        "title":"Mythic",
+        "color": 15401215
+    },
+    {
+        "title":"Legendary",
+        "color": 5375
+    },
+    {
+        "title":"Rare",
+        "color": 16711680
+    },
+    {
+        "title":"Special",
+        "color": 65321
+    },
+    {
+        "title":"Fundamental",
+        "color": 5127936
+    },
+]
+
+rarity_weights = [
+    0.05, # 5%
+    0.1,  # 10%
+    0.15, # 15%
+    0.3,  # 30%
+    0.4   # 40%
+]
+
 def uri_validator(x):
     try:
         result = urlparse(x)
@@ -22,11 +53,14 @@ async def add_joe(message, url):
     t = message.author
     joe_name = await get_joe_name(message, t)
     if joe_name:
-        await message.author.send("Creating {}".format(joe_name.content.title()))
-    # embed = discord.Embed(
-    #     title =  joe_name,
-    #     "
-    # )
+        stats = random.choices(population=rarity, weights=rarity_weights, k=1)[0]
+        embed = discord.Embed(
+            title = joe_name.content.title(),
+            colour = stats["color"],
+        )
+        embed.set_footer(text=stats["title"])
+        embed.set_image(url=url)
+        await message.author.send(embed=embed)
 
 async def get_joe_name(message,t ):
     joe_name = await client.wait_for('message', check=lambda message: message.author == t, timeout=30)
@@ -56,4 +90,4 @@ async def on_message(message):
         await message.delete()
         await t.delete()
 
-client.run("NzIyNjAyMTg4NDE3MDA3Njcz.Xulduw.RpJnEnSfm88R0Mol9VjgY5P8630")
+client.run("NzIyNjAyMTg4NDE3MDA3Njcz.Xulduw.db1lqNY9NOLUgz0n_PBdr2yNdC8")
