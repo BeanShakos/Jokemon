@@ -88,6 +88,31 @@ async def get_joe_name(message,t ):
         return joe_name
     #await message.author.send("No response or error. Scrapping this joe :(")
 
+@client.command(aliases=['unbox'])
+async def lootbox(ctx):
+    embed = discord.Embed(
+        title = "Unboxing New Joe...",
+        colour = 16711792,
+    )
+    embed.set_author(name="@{name}".format(name=ctx.message.author.name))
+    embed.set_image(url="https://media.discordapp.net/attachments/647626975011405835/762411097705152522/joes.gif?width=676&height=676")
+    t = await ctx.channel.send(embed=embed)
+    query = random.choices(population=rarity, weights=rarity_weights, k=1)[0]
+    options = []
+    joes = db.jokemon.find({"rarity":{"title":query["title"],"color":query["color"]}})
+    for joe in joes:
+        options.append(joe)
+    newJoe = random.choice(options)
+    embed = discord.Embed(
+        title = newJoe['title'],
+        colour = newJoe['rarity']['color'],
+    )
+    embed.set_author(name="@{name} - You got a new Joe!".format(name=ctx.message.author.name))
+    embed.set_footer(text=newJoe['rarity']["title"])
+    embed.set_image(url=newJoe['image_url'])
+    await asyncio.sleep(5)
+    await t.edit(embed=embed)
+
 @client.command(aliases=['joes'])
 async def fetch(ctx):
     t = await ctx.send("Fetching Joes...")
