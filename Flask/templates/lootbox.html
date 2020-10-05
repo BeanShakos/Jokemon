@@ -15,7 +15,6 @@
 </head>
 
 <body id="page-top">
-    <canvas id="confetti-canvas" style="position: fixed;z-index: 10;"></canvas>
     <script type="text/javascript" href="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
     <div id="wrapper">
@@ -28,12 +27,14 @@
                             <ul class="nav navbar-nav ml-auto">
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('cards') }}">Cards</a></li>
+                                <li class="nav-item"><a class="nav-link active" href="{{ url_for('lootbox') }}">Lootbox</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('rarity') }}">Rarity</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('leaderboard') }}">Leaderboard</a></li>
                             </ul>
                     </div>
             </div>
             </nav>
+            <canvas id="confetti-canvas" style="position: fixed;z-index: 10;"></canvas>
             <style>
                 .roulette {
                     text-align: center;
@@ -96,11 +97,16 @@
                                     showcase.style.height = '';
                                     showcase.style.maxHeight = '400px';
                                     $("#confetti-canvas").fadeOut(0)
-                                    var confettiSettings = { target: 'confetti-canvas' };
+                                    var confettiSettings = { 
+                                        target: 'confetti-canvas', 
+                                        start_from_edge: true,
+                                     };
                                     var confetti = new ConfettiGenerator(confettiSettings);
                                     confetti.render();
                                     await sleep(1000)
                                     $("#confetti-canvas").fadeIn(1000)
+                                    await sleep(5000)
+                                    document.getElementById('confetti-canvas').style.display = 'none';
                                 })
                             });
                         }
