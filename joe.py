@@ -52,7 +52,7 @@ def uri_validator(x):
     except:
         return False
 
-validFileTypes = ['png','jpg','mkv','mov','jpeg']
+validFileTypes = ['png','jpg','jpeg','gif']
 
 client = commands.Bot(command_prefix = '!')
 

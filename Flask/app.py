@@ -114,10 +114,65 @@ def lootbox():
         elif joe['rarity']['title'] == 'Joesus Christ':
             joe['image_url'] = 'https://www.digiseller.ru/preview/599286/p1_2134247_b8bd3e19.png'
             joesus.append(joe)
-    return render_template("lootbox.html", card_rarities=[joesus,mythic,legendary,rare,special,fundamental])
+    # Handle randomizing and weighting here
+    results = []
+    d = random.random()
+    if d >= 0.05:
+        joesus = []
+    cards=[random.sample(joesus, len(joesus)),random.sample(mythic,len(mythic))[:1],random.sample(legendary,len(legendary))[:2],random.sample(rare, len(rare))[:3],random.sample(special, len(special))[:6],fundamental[:8]]
+    for types in cards:
+        for card in types:
+            results.append(card)
+    # Final shuffle 
+    results = random.sample(results, len(results))
+    return render_template("lootbox.html", cards=results)
 
 # API
 @app.route('/api/leaderboard')
 def apiLeaderboard():
     jokemon = json.loads(dumps(list(db.jokemon.find())))
     return jsonify(jokemon)
+
+@app.route('/api/winner', methods=['POST'])
+def apiWinner():
+    jokemon = json.loads(dumps(list(db.jokemon.find())))
+    joes = json.loads(dumps(list(db.jokemon.find())))
+    joesus = []
+    mythic = []
+    legendary = []
+    rare = []
+    special = []
+    fundamental = []
+    for joe in joes:
+        if joe['rarity']['title'] == 'Mythic':
+            mythic.append(joe)
+        elif joe['rarity']['title'] == 'Legendary':
+            legendary.append(joe)
+        elif joe['rarity']['title'] == 'Rare':
+            rare.append(joe)
+        elif joe['rarity']['title'] == 'Special':
+            special.append(joe)
+        elif joe['rarity']['title'] == 'Fundamental':
+            fundamental.append(joe)
+        elif joe['rarity']['title'] == 'Joesus Christ':
+            joe['image_url'] = 'https://www.digiseller.ru/preview/599286/p1_2134247_b8bd3e19.png'
+            joesus.append(joe)
+    results = []
+    winner = None
+    d = random.random()
+    if d > 0 and d <= 0.4:
+        winner = random.choice(fundamental)
+    elif d > 0.4 and d <= 0.7:
+        winner = random.choice(special)
+    elif d > 0.7 and d <= 0.85:
+        winner = random.choice(rare)
+    elif d > 0.85 and d <= 0.95:
+        winner = random.choice(legendary)
+    elif d > 0.95 and d <= 0.999:
+        winner = random.choice(mythic)
+    elif d > 0.999 and d < 1:
+        winner = random.choice(joesus)
+    else:
+        winner = random.choice(fundamental)
+        
+    return jsonify(winner)
