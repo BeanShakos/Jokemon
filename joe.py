@@ -39,10 +39,10 @@ rarity = [
 rarity_weights = [
     0.0001,
     0.0499,
-    0.1, 
+    0.1,
     0.15,
     0.3,
-    0.4 
+    0.4
 ]
 
 def uri_validator(x):
@@ -107,11 +107,21 @@ async def lootbox(ctx):
         title = newJoe['title'],
         colour = newJoe['rarity']['color'],
     )
+    if  db.trainer.find(author.id):
+        db.trainer[author.id] += newJoe
+    else:
+        db.trainer.insert_one({author.id:newJoe})
     embed.set_author(name="@{name} - You got a new Joe!".format(name=ctx.message.author.name))
     embed.set_footer(text=newJoe['rarity']["title"])
     embed.set_image(url=newJoe['image_url'])
     await asyncio.sleep(5)
     await t.edit(embed=embed)
+
+@client.command(aliases=['deck'])
+async def get_cards():
+    embed.set_author("@{name}'s Joekedex:\n'")
+    for(joe in db.trainer.find(author.id)):
+        embed.set_image(text=joe)
 
 @client.command(aliases=['joes'])
 async def fetch(ctx):
